@@ -9,6 +9,8 @@ cd tomcat/
 
 mv templates/ base/
 
+cd base/
+
 kustomize create --autodetect
 
 ```

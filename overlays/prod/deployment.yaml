@@ -3,16 +3,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: release-name-tomcat
-  namespace: ingress
+  name: tomcat
+  namespace: tomcat
   labels:
     app.kubernetes.io/name: tomcat
-    helm.sh/chart: tomcat-10.3.9
-    app.kubernetes.io/instance: release-name
+    helm.sh/chart: tomcat-10.3.15
+    app.kubernetes.io/instance: tomcat
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: tomcat
-      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/instance: tomcat
