@@ -1,0 +1,100 @@
+---
+# Source: tomcat/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-tomcat
+  namespace: ingress
+  labels:
+    app.kubernetes.io/name: tomcat
+    helm.sh/chart: tomcat-10.3.9
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tomcat
+      app.kubernetes.io/instance: release-name
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tomcat
+        helm.sh/chart: tomcat-10.3.9
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: tomcat
+                    app.kubernetes.io/instance: release-name
+                namespaces:
+                  - "ingress"
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+      initContainers:
+      containers:
+        - name: tomcat
+          image: docker.io/bitnami/tomcat:10.0.22-debian-11-r7
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: TOMCAT_USERNAME
+              value: "user"
+            - name: TOMCAT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: release-name-tomcat
+                  key: tomcat-password
+            - name: TOMCAT_ALLOW_REMOTE_MANAGEMENT
+              value: "0"
+          ports:
+            - name: http
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            failureThreshold: 6
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 3
+          resources:
+            limits: {}
+            requests:
+              cpu: 300m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/tomcat
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: release-name-tomcat
